@@ -29,6 +29,9 @@ class SRModel(BaseModel):
             param_key = self.opt['path'].get('param_key_g', 'params')
             self.load_network(self.net_g, load_path, self.opt['path'].get('strict_load_g', True), param_key)
 
+        self.net_g_infer = self.net_g
+        self.net_g = torch.compile(self.net_g_infer)
+
         if self.is_train:
             self.init_training_settings()
 
@@ -273,7 +276,7 @@ class SRModel(BaseModel):
 
     def save(self, epoch, current_iter):
         if hasattr(self, 'net_g_ema'):
-            self.save_network([self.net_g, self.net_g_ema], 'net_g', current_iter, param_key=['params', 'params_ema'])
+            self.save_network([self.net_g_infer, self.net_g_ema_infer], 'net_g', current_iter, param_key=['params', 'params_ema'])
         else:
-            self.save_network(self.net_g, 'net_g', current_iter)
+            self.save_network(self.net_g_infer, 'net_g', current_iter)
         self.save_training_state(epoch, current_iter)
